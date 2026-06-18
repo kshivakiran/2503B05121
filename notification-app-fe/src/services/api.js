@@ -5,12 +5,20 @@ const api = axios.create({
   timeout: 10000,
 });
 
-// Logging Middleware (Interceptor) - Integrates logging across API calls
+// Request interceptor for logging & auth
 api.interceptors.request.use((config) => {
-  console.log(`[Logging Middleware] [API Request] ${config.method.toUpperCase()} ${config.url}`, config.params || '');
+  const token = localStorage.getItem('access_token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  
+  console.log(`[API Request] ${config.method.toUpperCase()} ${config.url}`, {
+    params: config.params,
+    headers: config.headers
+  });
   return config;
 }, (error) => {
-  console.error('[Logging Middleware] [API Request Error]', error);
+  console.error('[API Request Error]', error);
   return Promise.reject(error);
 });
 
