@@ -1,88 +1,124 @@
 import React from 'react';
-import { Card, CardContent, Typography, Box, Chip, alpha } from '@mui/material';
+import { Card, CardContent, Typography, Box, Chip, alpha, Tooltip } from '@mui/material';
+import BusinessCenterRoundedIcon from '@mui/icons-material/BusinessCenterRounded';
+import AssessmentRoundedIcon from '@mui/icons-material/AssessmentRounded';
+import CelebrationRoundedIcon from '@mui/icons-material/CelebrationRounded';
+import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
+import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import { formatDistanceToNow } from 'date-fns';
-import BusinessCenterIcon from '@mui/icons-material/BusinessCenter';
-import AssessmentIcon from '@mui/icons-material/Assessment';
-import EventIcon from '@mui/icons-material/Event';
+
+const TYPE_CONFIG = {
+  Placement: {
+    icon: <BusinessCenterRoundedIcon fontSize="small" />,
+    chipColor: '#10b981',
+    bgColor: '#ecfdf5',
+    borderColor: '#6ee7b7',
+    dotColor: '#10b981',
+    label: 'Placement',
+  },
+  Result: {
+    icon: <AssessmentRoundedIcon fontSize="small" />,
+    chipColor: '#0ea5e9',
+    bgColor: '#f0f9ff',
+    borderColor: '#7dd3fc',
+    dotColor: '#0ea5e9',
+    label: 'Result',
+  },
+  Event: {
+    icon: <CelebrationRoundedIcon fontSize="small" />,
+    chipColor: '#f59e0b',
+    bgColor: '#fffbeb',
+    borderColor: '#fcd34d',
+    dotColor: '#f59e0b',
+    label: 'Event',
+  },
+};
 
 const NotificationCard = ({ notification, isViewed, onClick }) => {
   const { ID, Type, Message, Timestamp } = notification;
-
-  const getTypeConfig = (type) => {
-    switch (type) {
-      case 'Placement': return { color: 'success', icon: <BusinessCenterIcon fontSize="small" /> };
-      case 'Result': return { color: 'info', icon: <AssessmentIcon fontSize="small" /> };
-      case 'Event': return { color: 'warning', icon: <EventIcon fontSize="small" /> };
-      default: return { color: 'default', icon: null };
-    }
-  };
-
-  const config = getTypeConfig(Type);
+  const config = TYPE_CONFIG[Type] || TYPE_CONFIG['Event'];
 
   const dateObj = new Date(Timestamp.replace(' ', 'T'));
-  const timeAgo = isNaN(dateObj.getTime()) ? Timestamp : formatDistanceToNow(dateObj, { addSuffix: true });
+  const timeAgo = isNaN(dateObj.getTime())
+    ? Timestamp
+    : formatDistanceToNow(dateObj, { addSuffix: true });
 
   return (
-    <Card 
-      onClick={() => onClick(ID)}
-      sx={{ 
-        mb: 2, 
-        cursor: 'pointer',
-        bgcolor: isViewed ? 'background.paper' : alpha('#4338ca', 0.04),
-        borderLeft: isViewed ? '4px solid transparent' : '4px solid #4338ca',
-        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-        position: 'relative',
-        overflow: 'visible',
-        '&:hover': {
-          transform: 'translateY(-2px)',
-          boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)',
-          borderColor: isViewed ? '#cbd5e1' : '#4338ca'
-        }
-      }}
-    >
-      {!isViewed && (
-        <Box 
-          sx={{
-            position: 'absolute',
-            top: -6,
-            right: -6,
-            width: 12,
-            height: 12,
-            bgcolor: '#ef4444',
-            borderRadius: '50%',
-            border: '2px solid white'
-          }}
-        />
-      )}
-      <CardContent sx={{ pb: '16px !important' }}>
-        <Box display="flex" justifyContent="space-between" alignItems="center" mb={1.5}>
-          <Chip 
-            icon={config.icon} 
-            label={Type} 
-            color={config.color} 
-            size="small" 
-            sx={{ 
-              fontWeight: 600, 
-              borderRadius: '6px',
-              bgcolor: (theme) => theme.palette[config.color].light,
-              color: (theme) => theme.palette[config.color].dark,
-              '& .MuiChip-icon': { color: 'inherit' }
-            }} 
+    <Tooltip title={isViewed ? 'Already read' : 'Click to mark as read'} placement="left" arrow>
+      <Card
+        onClick={() => onClick(ID)}
+        sx={{
+          mb: 2,
+          cursor: 'pointer',
+          borderRadius: '14px',
+          border: '1px solid',
+          borderColor: isViewed ? '#e2e8f0' : config.borderColor,
+          bgcolor: isViewed ? '#ffffff' : config.bgColor,
+          borderLeft: `5px solid ${isViewed ? '#cbd5e1' : config.chipColor}`,
+          boxShadow: 'none',
+          transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+          position: 'relative',
+          '&:hover': {
+            transform: 'translateY(-3px)',
+            boxShadow: `0 12px 24px -8px ${alpha(config.chipColor, isViewed ? 0.1 : 0.25)}`,
+            borderColor: config.chipColor,
+          }
+        }}
+      >
+        {/* Unread dot */}
+        {!isViewed && (
+          <FiberManualRecordIcon
+            sx={{
+              position: 'absolute',
+              top: 14,
+              right: 14,
+              fontSize: 10,
+              color: config.dotColor,
+              filter: `drop-shadow(0 0 3px ${config.dotColor})`,
+            }}
           />
-          <Typography variant="caption" color="text.secondary" fontWeight={500}>
-            {timeAgo}
+        )}
+
+        <CardContent sx={{ py: 2, px: 2.5, pb: '16px !important' }}>
+          {/* Top row: Chip + Time */}
+          <Box display="flex" alignItems="center" justifyContent="space-between" mb={1.5} pr={2}>
+            <Chip
+              icon={config.icon}
+              label={config.label}
+              size="small"
+              sx={{
+                bgcolor: alpha(config.chipColor, 0.12),
+                color: config.chipColor,
+                fontWeight: 700,
+                borderRadius: '6px',
+                fontSize: '0.73rem',
+                px: 0.5,
+                '& .MuiChip-icon': { color: config.chipColor, ml: '4px' },
+              }}
+            />
+            <Box display="flex" alignItems="center" gap={0.5}>
+              <AccessTimeIcon sx={{ fontSize: 13, color: 'text.disabled' }} />
+              <Typography variant="caption" color="text.disabled" fontWeight={500}>
+                {timeAgo}
+              </Typography>
+            </Box>
+          </Box>
+
+          {/* Message */}
+          <Typography
+            variant="body2"
+            sx={{
+              fontWeight: isViewed ? 400 : 600,
+              color: isViewed ? 'text.secondary' : 'text.primary',
+              lineHeight: 1.6,
+              fontSize: '0.92rem',
+            }}
+          >
+            {Message}
           </Typography>
-        </Box>
-        <Typography 
-          variant="body1" 
-          fontWeight={isViewed ? 400 : 600}
-          color={isViewed ? 'text.secondary' : 'text.primary'}
-          sx={{ lineHeight: 1.5 }}
-        >
-          {Message}
-        </Typography>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </Tooltip>
   );
 };
 
